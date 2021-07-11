@@ -1,0 +1,15 @@
+[package]
+name = "command-engine"
+version = "0.1.0"
+authors = ["FssAy <49795742+DmitrijVC@users.noreply.github.com>"]
+edition = "2018"
+
+[lib]
+path = "src/command-engine.rs"
+
+[dependencies.async-trait]
+version = "0.1.9"
+optional = true
+
+[features]
+async = ["async-trait"]
