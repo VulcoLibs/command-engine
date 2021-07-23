@@ -11,7 +11,6 @@ An engine to create your own command-line interpreter. <br>
 
 ## Disclaimer
 Versions `0.x.y` are not release ready, and might contain a lot of bugs. <br>
-Error handling and command conflict checks are still to be implemented.
 
 ## Example
 ```rust

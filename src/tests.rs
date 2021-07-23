@@ -50,3 +50,13 @@ fn engine_sync_help() {
         "test (.) |-.| |-.. [unused]|",
     );
 }
+
+#[test]
+fn engine_sync_duplicated_name() {
+    let mut engine = Engine::new().add(Test);
+
+    assert_eq!(
+        engine.add_separated(Test).is_err(),
+        true,
+    );
+}

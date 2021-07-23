@@ -6,7 +6,9 @@ use std::fmt::{Formatter, Display};
 mod instruction;
 #[doc(hidden)] mod help;  // Undocumented, beta module
 mod output;
+#[doc(hidden)] mod errors;
 
 pub use instruction::*;
 pub use help::{Help, SubArg};
 pub use output::Output;
+pub use errors::*;

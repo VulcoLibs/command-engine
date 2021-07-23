@@ -6,19 +6,21 @@ pub use command::*;
 
 
 /// Asynchronous Command Engine
-pub struct AsyncEngine<'a> {
-    commands: HashMap<String, Box<dyn AsyncCommand + 'a>>
+pub struct AsyncEngine<'engine> {
+    commands: HashMap<String, Box<dyn AsyncCommand + 'engine>>
 }
 
-impl<'a> AsyncEngine<'a> {
+impl<'engine> AsyncEngine<'engine> {
     /// Creates an empty AsyncEngine
     pub fn new() -> Self {
         Self {
-            commands: HashMap::<String, Box<dyn AsyncCommand + 'a>>::new()
+            commands: HashMap::<String, Box<dyn AsyncCommand + 'engine>>::new()
         }
     }
 
     /// Adds a new Command to the AsyncEngine and returns itself
+    ///
+    /// Panics when adding a command with already existsing name.
     ///
     /// # Arguments
     ///
@@ -38,9 +40,11 @@ impl<'a> AsyncEngine<'a> {
     /// let mut engine = AsyncEngine::new()
     ///   .add(MyCommand{});
     /// ```
-    pub fn add<C: AsyncCommand + 'a>(mut self, command_struct: C) -> Self {
+    pub fn add<C: AsyncCommand + 'engine>(mut self, command_struct: C) -> Self {
         let name = format!("{}", command_struct.name());
-        if let None = self.get_command(&name) {
+        if let Some(c) = self.get_command(&name) {
+            panic!("command [{}] already exists", c.name());
+        } else {
             self.commands.insert(command_struct.name().to_string(), Box::new(command_struct));
         }
 
@@ -48,6 +52,8 @@ impl<'a> AsyncEngine<'a> {
     }
 
     /// Adds a new Command to the AsyncEngine
+    ///
+    /// Returns error when adding a command with already existsing name.
     ///
     /// # Arguments
     ///
@@ -67,11 +73,17 @@ impl<'a> AsyncEngine<'a> {
     /// let mut engine = AsyncEngine::new();
     /// engine.add_separated(MyCommand{});
     /// ```
-    pub fn add_separated<C: AsyncCommand + 'a>(&mut self, command_struct: C) {
+    pub fn add_separated<C: AsyncCommand + 'engine>(&mut self, command_struct: C) -> CEResult<()> {
         let name = format!("{}", command_struct.name());
-        if let None = self.get_command(&name) {
+        if let Some(c) = self.get_command(&name) {
+            return Err(
+                Error::DuplicatedCommandName(c.name().to_string())
+            );
+        } else {
             self.commands.insert(command_struct.name().to_string(), Box::new(command_struct));
         }
+
+        Ok(())
     }
 
     /// Gets a raw string, tries to convert it into an Instruction and tries to execute the AsyncCommand based on provided data
@@ -111,7 +123,7 @@ impl<'a> AsyncEngine<'a> {
     }
 
     #[doc(hidden)]
-    fn get_command(&self, name: &String) -> Option<&Box<dyn AsyncCommand + 'a>> {
+    fn get_command(&self, name: &String) -> Option<&Box<dyn AsyncCommand + 'engine>> {
         match self.commands.get(name) {
             None => None,
             Some(command) => Some(command),
@@ -119,7 +131,7 @@ impl<'a> AsyncEngine<'a> {
     }
 
     #[doc(hidden)]
-    fn get_command_mut(&mut self, name: &String) -> Option<&mut Box<dyn AsyncCommand + 'a>> {
+    fn get_command_mut(&mut self, name: &String) -> Option<&mut Box<dyn AsyncCommand + 'engine>> {
         match self.commands.get_mut(name) {
             None => None,
             Some(command) => Some(command),
@@ -128,5 +140,5 @@ impl<'a> AsyncEngine<'a> {
 }
 
 // Asynchronous Send and Sync implementations for AsyncEngine
-unsafe impl<'a> Send for AsyncEngine<'a> {}
-unsafe impl<'a> Sync for AsyncEngine<'a> {}
+unsafe impl<'engine> Send for AsyncEngine<'engine> {}
+unsafe impl<'engine> Sync for AsyncEngine<'engine> {}
