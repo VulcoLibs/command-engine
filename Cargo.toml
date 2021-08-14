@@ -1,11 +1,17 @@
 [package]
 name = "command-engine"
-version = "0.2.0"
+version = "0.3.0"
 authors = ["FssAy <49795742+DmitrijVC@users.noreply.github.com>"]
 edition = "2018"
 
 [lib]
 path = "src/command-engine.rs"
+
+[dependencies.tokio]
+version = "1.9.0"
+features = [
+    "full"
+]
 
 [dependencies.async-trait]
 version = "0.1.9"

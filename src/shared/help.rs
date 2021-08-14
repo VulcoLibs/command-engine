@@ -1,8 +1,6 @@
 #![allow(dead_code)]
 
-
 use super::*;
-use std::fmt::Debug;
 
 
 fn parse_desc<S: AsRef<str>>(s: S) -> String {
@@ -22,20 +20,6 @@ fn parse_desc<S: AsRef<str>>(s: S) -> String {
     return desc;
 }
 
-
-#[derive(Copy, Clone, Eq, PartialEq, Hash)]
-pub enum HelpDisplay {
-    Structure,
-    Compact,
-    // Descriptive,
-    Custom,
-}
-
-impl Default for HelpDisplay {
-    fn default() -> Self {
-        Self::Structure
-    }
-}
 
 #[derive(Debug, Clone)]
 pub struct SubArg {
@@ -58,194 +42,167 @@ struct Args {
     val: HashMap<String, String>
 }
 
+
 #[derive(Clone, Default, Debug)]
 struct OArgs {
     val: HashMap<String, (String, Option<(String, bool)>)>
 }
 
+
 #[derive(Clone)]
-pub struct Help {
+struct HelpData {
     name: String,
     desc: String,
     args: Args,
     oargs: OArgs,
-    custom: String,
-    display: HelpDisplay,
+}
+
+enum HelpVariant {
+    Standard(HelpData),
+
+    #[deprecated]
+    Custom(String),
+}
+
+pub struct Help {
+    variant: HelpVariant,
 }
 
 impl Help {
     pub fn new<T: ToString, U: ToString>(name: T, desc: U) -> Self {
+        let h_var = HelpVariant::Standard(
+            HelpData {
+                name: name.to_string(),
+                desc: desc.to_string(),
+                args: Default::default(),
+                oargs: Default::default(),
+            }
+        );
+        
         Self {
-            name: name.to_string(),
-            desc: desc.to_string(),
-            args: Default::default(),
-            oargs: Default::default(),
-            custom: String::new(),
-            display: Default::default()
+            variant: h_var,
         }
     }
 
     pub fn custom<T: ToString>(help_message: T) -> Self {
         Self {
-            name: String::new(),
-            desc: String::new(),
-            args: Default::default(),
-            oargs: Default::default(),
-            custom: help_message.to_string(),
-            display: HelpDisplay::Custom,
+            variant: HelpVariant::Custom(help_message.to_string())
         }
-    }
-
-    pub fn set_display_structure(mut self) -> Self {
-        if self.display == HelpDisplay::Custom {
-            return self;
-        }
-
-        self.display = HelpDisplay::Structure;
-        self
-    }
-
-    pub fn set_display_compact(mut self) -> Self {
-        if self.display == HelpDisplay::Custom {
-            return self;
-        }
-
-        self.display = HelpDisplay::Compact;
-        self
-    }
-
-    pub fn change_desc<T: ToString>(mut self, desc: T) -> Self {
-        self.desc = desc.to_string();
-        self
     }
 
     pub fn add_arg<T: ToString, U: ToString>(mut self, name: T, desc: U) -> Self {
-        self.args.val.insert(name.to_string(), desc.to_string());
+        match &mut self.variant {
+            HelpVariant::Standard(h_var) => {
+                h_var.args.val.insert(name.to_string(), desc.to_string());
+            }
+            _ => ()
+        }
+
         self
     }
 
     pub fn add_oarg<T: ToString, U: ToString>(mut self, name: T, desc: U, sub_arg: Option<SubArg>) -> Self {
-        let sub_arg_parsed = if sub_arg.is_some() {
-            let sub_arg_unwrapped = sub_arg.unwrap();
+        match &mut self.variant {
+            HelpVariant::Standard(h_var) => {
+                let sub_arg_parsed = if sub_arg.is_some() {
+                    let sub_arg_unwrapped = sub_arg.unwrap();
 
-            Some((
-                sub_arg_unwrapped.name,
-                sub_arg_unwrapped.is_optional,
-            ))
-        } else {
-            None
-        };
+                    Some((
+                        sub_arg_unwrapped.name,
+                        sub_arg_unwrapped.is_optional,
+                    ))
+                } else {
+                    None
+                };
 
-        self.oargs.val.insert(
-            name.to_string(),
-            (desc.to_string(), sub_arg_parsed)
-        );
+                h_var.oargs.val.insert(
+                    name.to_string(),
+                    (desc.to_string(), sub_arg_parsed)
+                );
+            }
+            _ => ()
+        }
 
         self
     }
 
-    fn display_structure(&self, f: &mut Formatter<'_>) -> FmtResult {
-        if !self.custom.is_empty() && self.display == HelpDisplay::Custom {
-            return write!(f, "{}", self.custom);
+    pub fn format_custom(&self) -> String {
+        return match &self.variant {
+            HelpVariant::Standard(_) => self.format_compact(),
+            HelpVariant::Custom(custom) => format!("{}", custom),
         }
 
-        match (
-            self.args.val.is_empty(),
-            self.oargs.val.is_empty()
-        ) {
-            (true, true) => {
-                write!(f, "[{}] - {}", self.name, parse_desc(&self.desc))
-            }
-            (false, true) => {
-                write!(f, "NAME:\n\t[{}] - {}\n\n{}\n", self.name, parse_desc(&self.desc), self.args)
-            }
-            (true, false) => {
-                write!(f, "NAME:\n\t[{}] - {}\n\n{}\n", self.name, parse_desc(&self.desc), self.oargs)
-            }
-            (false, false) => {
-                write!(f, "NAME:\n\t[{}] - {}\n\n{}\n\n{}\n", self.name, parse_desc(&self.desc), self.args, self.oargs)
-            }
-        }
     }
 
-    fn display_compact(&self, f: &mut Formatter<'_>) -> FmtResult {
-        if !self.custom.is_empty() && self.display == HelpDisplay::Custom {
-            return write!(f, "{}", self.custom);
-        }
-
-        let mut args = String::new();
-        for (arg, _) in self.args.val.iter() {
-            args += &*format!("({}) ", arg);
-        }
-
-        args.pop();
-
-        let mut oargs = String::new();
-        for (oarg, (_, sub_arg)) in self.oargs.val.iter() {
-            if sub_arg.is_some() {
-                let sub_arg_un = sub_arg.as_ref().unwrap();
-                if sub_arg_un.1 {
-                    oargs += &*format!("|{} [{}]| ", oarg, sub_arg_un.0);
-                } else {
-                    oargs += &*format!("|{} ({})| ", oarg, sub_arg_un.1);
+    pub fn format_structure(&self) -> String {
+        return match &self.variant {
+            HelpVariant::Standard(h_var) => {
+                match (
+                    h_var.args.val.is_empty(),
+                    h_var.oargs.val.is_empty()
+                ) {
+                    (true, true) => {
+                        format!("[{}] - {}", h_var.name, parse_desc(&h_var.desc))
+                    }
+                    (false, true) => {
+                        format!("NAME:\n\t[{}] - {}\n\n{}\n", h_var.name, parse_desc(&h_var.desc), h_var.args)
+                    }
+                    (true, false) => {
+                        format!("NAME:\n\t[{}] - {}\n\n{}\n", h_var.name, parse_desc(&h_var.desc), h_var.oargs)
+                    }
+                    (false, false) => {
+                        format!("NAME:\n\t[{}] - {}\n\n{}\n\n{}\n", h_var.name, parse_desc(&h_var.desc), h_var.args, h_var.oargs)
+                    }
                 }
-            } else {
-                oargs += &*format!("|{}| ", oarg);
+            }
+
+            HelpVariant::Custom(_) => {
+                self.format_custom()
             }
         }
-
-        oargs.pop();
-
-        write!(
-            f,
-            "{} {} {}",
-            self.name,
-            args,
-            oargs
-        )
     }
 
-    fn display_custom(&self, f: &mut Formatter<'_>) -> FmtResult {
-        write!(f, "{}", self.custom)
-    }
-}
+    pub fn format_compact(&self) -> String {
+        return match &self.variant {
+            HelpVariant::Standard(h_var) => {
+                let mut args = String::new();
+                for (arg, _) in h_var.args.val.iter() {
+                    args += &*format!("({}) ", arg);
+                }
 
-impl Default for Help {
-    fn default() -> Self {
-        Self {
-            name: String::from("_UNKNOWN"),
-            desc: String::from("The Help definition is empty!"),
-            args: Default::default(),
-            oargs: Default::default(),
-            custom: String::new(),
-            display: Default::default()
+                args.pop();
+
+                let mut oargs = String::new();
+                for (oarg, (_, sub_arg)) in h_var.oargs.val.iter() {
+                    if sub_arg.is_some() {
+                        let sub_arg_un = sub_arg.as_ref().unwrap();
+                        if sub_arg_un.1 {
+                            oargs += &*format!("|{} [{}]| ", oarg, sub_arg_un.0);
+                        } else {
+                            oargs += &*format!("|{} ({})| ", oarg, sub_arg_un.1);
+                        }
+                    } else {
+                        oargs += &*format!("|{}| ", oarg);
+                    }
+                }
+
+                oargs.pop();
+
+                format!(
+                    "{} {} {}",
+                    h_var.name,
+                    args,
+                    oargs
+                )
+            }
+
+            HelpVariant::Custom(_) => {
+                self.format_custom()
+            }
         }
     }
-}
 
-// Unresolved conflict
-/*impl<C: Command + ?Sized> From<&C> for Help {
-    fn from(command: &C) -> Self {
-        Self {
-            name: command.name().to_string(),
-            desc: String::from("help is not implemented for this sync command"),
-            args: Default::default(),
-            oargs: Default::default()
-        }
-    }
 }
-
-#[cfg(feature = "async")]
-impl<A> From<&A> for Help {
-    fn from(command: &A) -> Self {
-        Self {
-            name: command.name().to_string(),
-            desc: String::from("help is not implemented for this async command"),
-            args: Default::default(),
-            oargs: Default::default()
-        }
-    }
-}*/
 
 impl Display for Args {
     fn fmt(&self, f: &mut Formatter<'_>) -> FmtResult {
@@ -291,15 +248,5 @@ impl Display for OArgs {
             "{}",
             display,
         )
-    }
-}
-
-impl Display for Help {
-    fn fmt(&self, f: &mut Formatter<'_>) -> FmtResult {
-        match self.display {
-            HelpDisplay::Structure => (&self).display_structure(f),
-            HelpDisplay::Compact => (&self).display_compact(f),
-            HelpDisplay::Custom => (&self).display_custom(f),
-        }
     }
 }

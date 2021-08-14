@@ -9,8 +9,9 @@ pub trait AsyncCommand: Send + Sync {
     fn name(&self) -> &str;
 
     /// Returns help message when `<CommandName> help` was called
-    fn on_help(&self) -> Help {
-        Help::new((&self).name(), "help is not implemented for this async command")
+    #[allow(unused_variables)]
+    fn on_help(&self, ins: &Instruction) -> String {
+        Help::new((&self).name(), "help is not implemented for this async command").format_compact()
     }
 
     /// Logic that executes when the Instruction had the Command's name

@@ -115,7 +115,7 @@ impl<'engine> AsyncEngine<'engine> {
 
         if let Some(arg0) = instruction.args.get(0) {
             if arg0.eq("help") {
-                return Output::new_ok(0, Some(command.on_help()));
+                return Output::new_ok(0, Some(command.on_help(&instruction)));
             }
         }
 

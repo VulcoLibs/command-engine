@@ -1,5 +1,6 @@
 use crate::*;
 use crate::shared::*;
+// use crate::shared::commands::*;
 
 struct Test;
 impl Command for Test {
@@ -7,12 +8,12 @@ impl Command for Test {
         "test"
     }
 
-    fn on_help(&self) -> Help {
+    fn on_help(&self, _: &Instruction) -> String {
         Help::new(&self.name(), "testing sync command")
             .add_arg(".", "unused argument")
             .add_oarg("-.", "unused o-argument", None)
             .add_oarg("-..", "unused o-argument\nwith unused sub-argument", Some(SubArg::new("unused", true)))
-            .set_display_compact()
+            .format_compact()
     }
 
     fn on_execute(&mut self, ins: &Instruction) -> Output {
@@ -28,6 +29,18 @@ impl Command for Test {
     }
 }
 
+/*
+    #[tokio::test]
+    #[cfg(feature = "async")]
+    async fn engine_async() {
+        use sys::Env;
+
+        let mut engine = AsyncEngine::new()
+            .add(Env::new());
+
+        println!("{}", engine.execute("env get CLion").await);
+    }
+*/
 
 #[test]
 fn engine_sync_execution() {
@@ -37,17 +50,6 @@ fn engine_sync_execution() {
     assert_eq!(
         output.message,
         String::from("name[test]args[1]oargs[2]"),
-    );
-}
-
-#[test]
-fn engine_sync_help() {
-    let mut engine = Engine::new().add(Test);
-    let output = engine.execute("test help");
-
-    assert_eq!(
-        output.message,
-        "test (.) |-.| |-.. [unused]|",
     );
 }
 
