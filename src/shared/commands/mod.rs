@@ -2,8 +2,8 @@
 
 mod messages;
 
-// #[cfg(feature = "c-sys")]
-// pub mod sys;
+#[cfg(feature = "c-sys")]
+pub mod sys;
 
 #[cfg(feature = "c-fs")]
 pub mod fs;
