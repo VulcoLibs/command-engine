@@ -4,9 +4,9 @@ mod messages;
 
 // #[cfg(feature = "c-sys")]
 // pub mod sys;
-//
-// #[cfg(feature = "c-fs")]
-// pub mod fs;
+
+#[cfg(feature = "c-fs")]
+pub mod fs;
 
 #[cfg(feature = "async")]
 use crate::engines::AsyncCommand;
