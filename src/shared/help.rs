@@ -1,9 +1,12 @@
-#![allow(dead_code)]
-#![allow(deprecated)]
-
 use super::*;
 
 
+/// Parses description into structural-friendly style.
+///
+/// # Arguments
+/// * `s` - A generic with `AsRef<str>` implementation
+///
+/// Returns formatted `String`.
 fn parse_desc<S: AsRef<str>>(s: S) -> String {
     let mut desc = s.as_ref().to_string();
 
@@ -22,187 +25,12 @@ fn parse_desc<S: AsRef<str>>(s: S) -> String {
 }
 
 
-#[derive(Debug, Clone)]
-pub struct SubArg {
-    pub name: String,
-    pub is_optional: bool,
-}
-
-impl SubArg {
-    pub fn new<S: ToString>(name: S, is_optional: bool) -> Self {
-        Self {
-            name: name.to_string(),
-            is_optional,
-        }
-    }
-}
-
-
+/// Structure for representing positional arguments.
 #[derive(Clone, Default, Debug)]
 struct Args {
+    /// `Key` - Name of the positional argument <br>
+    /// `Value` - Description of the positional argument
     val: HashMap<String, String>
-}
-
-
-#[derive(Clone, Default, Debug)]
-struct OArgs {
-    val: HashMap<String, (String, Option<(String, bool)>)>
-}
-
-
-#[derive(Clone)]
-struct HelpData {
-    name: String,
-    desc: String,
-    args: Args,
-    oargs: OArgs,
-}
-
-enum HelpVariant {
-    Standard(HelpData),
-
-    #[deprecated]
-    Custom(String),
-}
-
-pub struct Help {
-    variant: HelpVariant,
-}
-
-impl Help {
-    pub fn new<T: ToString, U: ToString>(name: T, desc: U) -> Self {
-        let h_var = HelpVariant::Standard(
-            HelpData {
-                name: name.to_string(),
-                desc: desc.to_string(),
-                args: Default::default(),
-                oargs: Default::default(),
-            }
-        );
-        
-        Self {
-            variant: h_var,
-        }
-    }
-
-    pub fn custom<T: ToString>(help_message: T) -> Self {
-        Self {
-            variant: HelpVariant::Custom(help_message.to_string())
-        }
-    }
-
-    pub fn add_arg<T: ToString, U: ToString>(mut self, name: T, desc: U) -> Self {
-        match &mut self.variant {
-            HelpVariant::Standard(h_var) => {
-                h_var.args.val.insert(name.to_string(), desc.to_string());
-            }
-            _ => ()
-        }
-
-        self
-    }
-
-    pub fn add_oarg<T: ToString, U: ToString>(mut self, name: T, desc: U, sub_arg: Option<SubArg>) -> Self {
-        match &mut self.variant {
-            HelpVariant::Standard(h_var) => {
-                let sub_arg_parsed = if sub_arg.is_some() {
-                    let sub_arg_unwrapped = sub_arg.unwrap();
-
-                    Some((
-                        sub_arg_unwrapped.name,
-                        sub_arg_unwrapped.is_optional,
-                    ))
-                } else {
-                    None
-                };
-
-                h_var.oargs.val.insert(
-                    name.to_string(),
-                    (desc.to_string(), sub_arg_parsed)
-                );
-            }
-            _ => ()
-        }
-
-        self
-    }
-
-    pub fn format_custom(&self) -> String {
-        return match &self.variant {
-            HelpVariant::Standard(_) => self.format_compact(),
-            HelpVariant::Custom(custom) => format!("{}", custom),
-        }
-
-    }
-
-    pub fn format_structure(&self) -> String {
-        return match &self.variant {
-            HelpVariant::Standard(h_var) => {
-                match (
-                    h_var.args.val.is_empty(),
-                    h_var.oargs.val.is_empty()
-                ) {
-                    (true, true) => {
-                        format!("[{}] - {}", h_var.name, parse_desc(&h_var.desc))
-                    }
-                    (false, true) => {
-                        format!("NAME:\n\t[{}] - {}\n\n{}\n", h_var.name, parse_desc(&h_var.desc), h_var.args)
-                    }
-                    (true, false) => {
-                        format!("NAME:\n\t[{}] - {}\n\n{}\n", h_var.name, parse_desc(&h_var.desc), h_var.oargs)
-                    }
-                    (false, false) => {
-                        format!("NAME:\n\t[{}] - {}\n\n{}\n\n{}\n", h_var.name, parse_desc(&h_var.desc), h_var.args, h_var.oargs)
-                    }
-                }
-            }
-
-            HelpVariant::Custom(_) => {
-                self.format_custom()
-            }
-        }
-    }
-
-    pub fn format_compact(&self) -> String {
-        return match &self.variant {
-            HelpVariant::Standard(h_var) => {
-                let mut args = String::new();
-                for (arg, _) in h_var.args.val.iter() {
-                    args += &*format!("({}) ", arg);
-                }
-
-                args.pop();
-
-                let mut oargs = String::new();
-                for (oarg, (_, sub_arg)) in h_var.oargs.val.iter() {
-                    if sub_arg.is_some() {
-                        let sub_arg_un = sub_arg.as_ref().unwrap();
-                        if sub_arg_un.1 {
-                            oargs += &*format!("|{} [{}]| ", oarg, sub_arg_un.0);
-                        } else {
-                            oargs += &*format!("|{} ({})| ", oarg, sub_arg_un.1);
-                        }
-                    } else {
-                        oargs += &*format!("|{}| ", oarg);
-                    }
-                }
-
-                oargs.pop();
-
-                format!(
-                    "{} {} {}",
-                    h_var.name,
-                    args,
-                    oargs
-                )
-            }
-
-            HelpVariant::Custom(_) => {
-                self.format_custom()
-            }
-        }
-    }
-
 }
 
 impl Display for Args {
@@ -221,6 +49,16 @@ impl Display for Args {
             display,
         )
     }
+}
+
+
+/// Structure for representing optional arguments.
+#[derive(Clone, Default, Debug)]
+struct OArgs {
+    /// `Key` - Name of the optional argument <br>
+    /// `Value.0` - Description of the optional argument <br>
+    /// `Value.1` - Sub argument (name, is_optional)
+    val: HashMap<String, (String, Option<(String, bool)>)>
 }
 
 impl Display for OArgs {
@@ -251,3 +89,163 @@ impl Display for OArgs {
         )
     }
 }
+
+
+/// Structure for representing sub arguments.
+#[derive(Debug, Clone)]
+pub struct SubArg {
+    pub name: String,
+    pub is_optional: bool,
+}
+
+impl SubArg {
+    pub fn new<S: ToString>(name: S, is_optional: bool) -> Self {
+        Self {
+            name: name.to_string(),
+            is_optional,
+        }
+    }
+}
+
+
+/// Structure for easier "help" creation.
+#[derive(Clone)]
+pub struct Help {
+    name: String,
+    desc: String,
+    args: Args,
+    oargs: OArgs,
+}
+
+impl Help {
+    /// Creates new, simple `Help` instance.
+    ///
+    /// # Arguments
+    /// * `name` - Name of the command.
+    /// * `desc` - Command description.
+    ///
+    /// Returns `Help`.
+    pub fn new<T: ToString, U: ToString>(name: T, desc: U) -> Self {
+        Self {
+            name: name.to_string(),
+            desc: desc.to_string(),
+            args: Default::default(),
+            oargs: Default::default(),
+        }
+    }
+
+    /// Adds an argument into the Help.
+    ///
+    /// # Arguments
+    /// * `name` - Name of the argument.
+    /// * `desc` - Argument description.
+    ///
+    /// Returns `Help`.
+    ///
+    /// Example:
+    /// ```rust
+    /// let help = Help::new("mycommand", "an empty tut command")
+    ///     .add_arg("argument1", "does nothing");
+    /// ```
+    pub fn add_arg<T: ToString, U: ToString>(mut self, name: T, desc: U) -> Self {
+        self.args.val.insert(
+            name.to_string(),
+            desc.to_string()
+        );
+
+        self
+    }
+
+    /// Adds an optional argument into the Help.
+    ///
+    /// # Arguments
+    /// * `name` - Name of the o-argument.
+    /// * `desc` - O-Argument description.
+    /// * `sub_arg` - Sub argument representation of the optional argument.
+    ///
+    /// Returns `Help`.
+    pub fn add_oarg<T: ToString, U: ToString>(mut self, name: T, desc: U, sub_arg: Option<SubArg>) -> Self {
+        let sub_arg_parsed = if sub_arg.is_some() {
+            let sub_arg_unwrapped = sub_arg.unwrap();
+
+            Some((
+                sub_arg_unwrapped.name,
+                sub_arg_unwrapped.is_optional,
+            ))
+        } else {
+            None
+        };
+
+        self.oargs.val.insert(
+            name.to_string(),
+            (desc.to_string(), sub_arg_parsed)
+        );
+
+        self
+    }
+
+    /// Gets the command name that the `Help` is referring to.
+    pub fn get_command_name(&self) -> &str {
+        self.name.as_str()
+    }
+
+    /// Gets the command description that the `Help` is referring to.
+    pub fn get_command_description(&self) -> &str {
+        self.desc.as_str()
+    }
+
+    /// Formats the `Help` into a structural style.
+    pub fn format_structure(&self) -> String {
+        match (
+            self.args.val.is_empty(),
+            self.oargs.val.is_empty()
+        ) {
+            (true, true) => {
+                format!("[{}] - {}", self.name, parse_desc(&self.desc))
+            }
+            (false, true) => {
+                format!("NAME:\n\t[{}] - {}\n\n{}\n", self.name, parse_desc(&self.desc), self.args)
+            }
+            (true, false) => {
+                format!("NAME:\n\t[{}] - {}\n\n{}\n", self.name, parse_desc(&self.desc), self.oargs)
+            }
+            (false, false) => {
+                format!("NAME:\n\t[{}] - {}\n\n{}\n\n{}\n", self.name, parse_desc(&self.desc), self.args, self.oargs)
+            }
+        }
+    }
+
+    /// Formats the `Help` into a compact style.
+    pub fn format_compact(&self) -> String {
+        let mut args = String::new();
+        for (arg, _) in self.args.val.iter() {
+            args += &*format!("({}) ", arg);
+        }
+
+        args.pop();
+
+        let mut oargs = String::new();
+        for (oarg, (_, sub_arg)) in self.oargs.val.iter() {
+            if sub_arg.is_some() {
+                let sub_arg_un = sub_arg.as_ref().unwrap();
+                if sub_arg_un.1 {
+                    oargs += &*format!("|{} [{}]| ", oarg, sub_arg_un.0);
+                } else {
+                    oargs += &*format!("|{} ({})| ", oarg, sub_arg_un.1);
+                }
+            } else {
+                oargs += &*format!("|{}| ", oarg);
+            }
+        }
+
+        oargs.pop();
+
+        format!(
+            "{} {} {}",
+            self.name,
+            args,
+            oargs
+        )
+    }
+}
+
