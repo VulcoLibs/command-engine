@@ -12,3 +12,4 @@ pub mod shared;
 #[cfg(feature = "async")]
 pub use async_trait::async_trait;
 pub use engines::*;
+pub use shared::commands;

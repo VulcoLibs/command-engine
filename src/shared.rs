@@ -7,6 +7,7 @@ mod instruction;
 #[doc(hidden)] mod help;  // Undocumented, beta module
 mod output;
 #[doc(hidden)] mod errors;
+#[doc(hidden)] pub mod commands;  // WIP
 
 pub use instruction::*;
 pub use help::{Help, SubArg};

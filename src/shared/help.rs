@@ -1,4 +1,5 @@
 #![allow(dead_code)]
+#![allow(deprecated)]
 
 use super::*;
 

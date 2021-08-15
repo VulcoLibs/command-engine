@@ -1,6 +1,5 @@
 use crate::*;
-use crate::shared::*;
-// use crate::shared::commands::*;
+use shared::{Instruction, Help, Output, SubArg};
 
 struct Test;
 impl Command for Test {
@@ -29,18 +28,18 @@ impl Command for Test {
     }
 }
 
-/*
-    #[tokio::test]
-    #[cfg(feature = "async")]
-    async fn engine_async() {
-        use sys::Env;
+#[tokio::test]
+#[cfg(feature = "async")]
+#[cfg(feature = "c-fs")]
+async fn engine_async() {
+    use shared::commands::fs::Cwd;
 
-        let mut engine = AsyncEngine::new()
-            .add(Env::new());
+    let mut engine = AsyncEngine::new()
+        .add(Cwd::new());
 
-        println!("{}", engine.execute("env get CLion").await);
-    }
-*/
+    assert!(engine.execute("cwd").await.result.is_ok())
+}
+
 
 #[test]
 fn engine_sync_execution() {

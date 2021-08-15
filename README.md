@@ -1,4 +1,4 @@
-# Command Engine [v0.2.0] (Rewrite)
+# Command Engine
 An engine to create your own command-line interpreter. <br>
 - No dependencies *(only sync)*
 - Commands as user-defined structures
