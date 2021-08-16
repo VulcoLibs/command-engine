@@ -9,6 +9,9 @@ mod output;
 #[doc(hidden)] mod errors;
 #[doc(hidden)] pub mod commands;  // WIP
 
+#[macro_use]
+mod macros;
+
 pub use instruction::*;
 pub use help::{Help, SubArg};
 pub use output::Output;
