@@ -3,6 +3,7 @@ use std::path::Path;
 use std::env::{current_dir, set_current_dir};
 
 
+#[must_use = "Correct functionality of this command isn't guaranteed as it wasn't tested yet!"]
 pub struct Cwd;
 
 impl Cwd {

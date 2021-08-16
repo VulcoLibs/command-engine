@@ -2,6 +2,7 @@ use super::*;
 use std::env;
 
 
+#[must_use = "Correct functionality of this command isn't guaranteed as it wasn't tested yet!"]
 pub struct Env {
 
 }

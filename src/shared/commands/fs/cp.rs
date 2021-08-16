@@ -13,6 +13,7 @@ enum CpAction {
 }
 
 
+#[must_use = "Correct functionality of this command isn't guaranteed as it wasn't tested yet!"]
 pub struct Cp;
 
 impl Cp {
