@@ -11,6 +11,7 @@ pub mod fs;
 #[cfg(feature = "async")]
 use crate::engines::AsyncCommand;
 use crate::engines::Command;
+use super::macros::residual;
 
 use crate::shared::{
     Help,
