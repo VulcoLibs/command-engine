@@ -41,9 +41,16 @@ impl Ld {
             dir_data.push(String::from("--- Dirs ---\n"));
         }
 
-        let stream = read_dir(path.as_ref()).await;
-        for mut rd in stream {
-            if let Some(dir_entry) = rd.next_entry().await.unwrap_or(None) {
+        let mut rd = read_dir(path.as_ref()).await.unwrap();
+        loop {
+            let dir_entry_o = match rd.next_entry().await {
+                Ok(dir_entry_o) => dir_entry_o,
+                Err(_) => {
+                    break;
+                }
+            };
+
+            if let Some(dir_entry) = dir_entry_o {
                 let entry_path = dir_entry.path();
 
                 if entry_path.is_dir() {
@@ -61,6 +68,8 @@ impl Ld {
                         ));
                     }
                 }
+            } else {
+                break;
             }
         }
 
