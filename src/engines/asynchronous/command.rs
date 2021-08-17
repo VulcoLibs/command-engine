@@ -17,5 +17,5 @@ pub trait AsyncCommand: Send + Sync {
     /// Logic that executes when the Instruction had the Command's name
     ///
     /// Returns an Output indicating in the success or failure of the Command execution
-    async fn on_execute(&mut self, ins: &Instruction) -> Output;
+    async fn on_execute(&self, ins: &Instruction) -> Output;
 }

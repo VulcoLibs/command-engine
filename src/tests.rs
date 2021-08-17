@@ -15,7 +15,7 @@ impl Command for Test {
             .format_compact()
     }
 
-    fn on_execute(&mut self, ins: &Instruction) -> Output {
+    fn on_execute(&self, ins: &Instruction) -> Output {
         Output::new_ok(
             0,
             Some(format!(
@@ -34,7 +34,7 @@ impl Command for Test {
 async fn engine_async() {
     use shared::commands::fs::Cwd;
 
-    let mut engine = AsyncEngine::new()
+    let engine = AsyncEngine::new()
         .add(Cwd::new());
 
     assert!(engine.execute("cwd").await.result.is_ok())
@@ -43,7 +43,7 @@ async fn engine_async() {
 
 #[test]
 fn engine_sync_execution() {
-    let mut engine = Engine::new().add(Test);
+    let engine = Engine::new().add(Test);
     let output = engine.execute("test . -. -.. -.. a");
 
     assert_eq!(

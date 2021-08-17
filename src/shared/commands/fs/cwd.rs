@@ -12,7 +12,7 @@ impl Cwd {
         Self {}
     }
 
-    fn execute(&mut self, ins: &Instruction) -> Output {
+    fn execute(&self, ins: &Instruction) -> Output {
         if ins.args.len() < 1 {
             return match current_dir() {
                 Ok(path) => {
@@ -46,7 +46,7 @@ impl Command for Cwd {
         "cwd"
     }
 
-    fn on_execute(&mut self, ins: &Instruction) -> Output {
+    fn on_execute(&self, ins: &Instruction) -> Output {
         self.execute(ins)
     }
 }

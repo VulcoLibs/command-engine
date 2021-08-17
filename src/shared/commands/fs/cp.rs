@@ -72,7 +72,7 @@ impl Command for Cp {
         Self::name()
     }
 
-    fn on_execute(&mut self, ins: &Instruction) -> Output {
+    fn on_execute(&self, ins: &Instruction) -> Output {
         let (source, target, action) = residual!(Self::parse_instruction(ins));
 
         return match action {
@@ -89,7 +89,7 @@ impl AsyncCommand for Cp {
         Self::name()
     }
 
-    async fn on_execute(&mut self, ins: &Instruction) -> Output {
+    async fn on_execute(&self, ins: &Instruction) -> Output {
         let (source, target, action) = residual!(Self::parse_instruction(ins));
 
         return match action {

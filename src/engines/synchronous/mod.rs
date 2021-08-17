@@ -100,13 +100,13 @@ impl<'engine> Engine<'engine> {
     /// let output = engine.execute(&raw);
     /// println!("StatusCode: '{}'\n{}", output.result, output.message);
     /// ```
-    pub fn execute<S: AsRef<str>>(&mut self, raw_instruction: S) -> Output {
+    pub fn execute<S: AsRef<str>>(&self, raw_instruction: S) -> Output {
         let instruction = match Instruction::new(raw_instruction) {
             Ok(instruction) => instruction,
             Err(output) => return output,
         };
 
-        let command = match self.get_command_mut(&instruction.value) {
+        let command = match self.get_command(&instruction.value) {
             None => return Output::new_error(0, Some(String::from("Invalid command!"))),
             Some(command) => command,
         };
@@ -128,6 +128,8 @@ impl<'engine> Engine<'engine> {
         }
     }
 
+    #[deprecated]
+    #[allow(dead_code)]
     #[doc(hidden)]
     fn get_command_mut(&mut self, name: &String) -> Option<&mut Box<dyn Command + 'engine>> {
         match self.commands.get_mut(name) {

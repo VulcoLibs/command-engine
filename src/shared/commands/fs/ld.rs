@@ -77,7 +77,7 @@ impl Ld {
         data
     }
 
-    async fn execute(&mut self, ins: &Instruction) -> Output {
+    async fn execute(&self, ins: &Instruction) -> Output {
         let get_action = || {
             match {
                 (
@@ -113,7 +113,7 @@ impl Command for Ld {
         Ld::name()
     }
 
-    fn on_execute(&mut self, ins: &Instruction) -> Output {
+    fn on_execute(&self, ins: &Instruction) -> Output {
         let future = async move {
             self.execute(ins).await
         };
@@ -132,7 +132,7 @@ impl AsyncCommand for Ld {
         Ld::name()
     }
 
-    async fn on_execute(&mut self, ins: &Instruction) -> Output {
+    async fn on_execute(&self, ins: &Instruction) -> Output {
         self.execute(ins).await
     }
 }

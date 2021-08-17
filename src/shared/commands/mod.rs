@@ -39,7 +39,7 @@ mod macros {
                     Command::on_help(self, ins)
                 }
 
-                async fn on_execute(&mut self, ins: &Instruction) -> Output {
+                async fn on_execute(&self, ins: &Instruction) -> Output {
                     Command::on_execute(self, ins)
                 }
             }
