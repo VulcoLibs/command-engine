@@ -24,7 +24,7 @@ impl Cwd {
             }
         }
 
-        let path = Path::new(ins.args.get(1).unwrap());
+        let path = Path::new(ins.args.get(0).unwrap());
 
         if !(path.exists() && path.is_dir()) {
             return Output::new_error(2, Some(messages::ERR_NOT_A_DIR_PATH));
