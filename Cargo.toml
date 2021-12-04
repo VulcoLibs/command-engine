@@ -1,25 +1,24 @@
 [package]
 name = "command-engine"
-version = "0.5.2"
+version = "0.6.0"
 authors = ["FssAy <49795742+DmitrijVC@users.noreply.github.com>"]
 edition = "2018"
 
 [lib]
 path = "src/command-engine.rs"
 
+[dependencies]
+async-trait = "0.1.9"
+lazy_static = "1.4.0"
+
 [dependencies.tokio]
 version = "1.9.0"
 features = [
-    "full"
+    "rt-multi-thread",
+    "sync",
+    # "full",
 ]
 
-[dependencies.async-trait]
-version = "0.1.9"
-optional = true
-
 [features]
-full = ["async", "commands"]
-async = ["async-trait"]
-commands = ["c-fs", "c-sys"]
-c-fs = []
-c-sys = []
+default = []
+full = []

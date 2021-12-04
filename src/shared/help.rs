@@ -111,7 +111,7 @@ impl SubArg {
 /// Structure for easier "help" creation.
 #[derive(Clone)]
 pub struct Help {
-    name: String,
+    caller: String,
     desc: String,
     args: Args,
     oargs: OArgs,
@@ -127,7 +127,7 @@ impl Help {
     /// Returns `Help`.
     pub fn new<T: ToString, U: ToString>(name: T, desc: U) -> Self {
         Self {
-            name: name.to_string(),
+            caller: name.to_string(),
             desc: desc.to_string(),
             args: Default::default(),
             oargs: Default::default(),
@@ -186,7 +186,7 @@ impl Help {
 
     /// Gets the command name that the `Help` is referring to.
     pub fn get_command_name(&self) -> &str {
-        self.name.as_str()
+        self.caller.as_str()
     }
 
     /// Gets the command description that the `Help` is referring to.
@@ -201,16 +201,16 @@ impl Help {
             self.oargs.val.is_empty()
         ) {
             (true, true) => {
-                format!("[{}] - {}", self.name, parse_desc(&self.desc))
+                format!("[{}] - {}", self.caller, parse_desc(&self.desc))
             }
             (false, true) => {
-                format!("NAME:\n\t[{}] - {}\n\n{}\n", self.name, parse_desc(&self.desc), self.args)
+                format!("NAME:\n\t[{}] - {}\n\n{}\n", self.caller, parse_desc(&self.desc), self.args)
             }
             (true, false) => {
-                format!("NAME:\n\t[{}] - {}\n\n{}\n", self.name, parse_desc(&self.desc), self.oargs)
+                format!("NAME:\n\t[{}] - {}\n\n{}\n", self.caller, parse_desc(&self.desc), self.oargs)
             }
             (false, false) => {
-                format!("NAME:\n\t[{}] - {}\n\n{}\n\n{}\n", self.name, parse_desc(&self.desc), self.args, self.oargs)
+                format!("NAME:\n\t[{}] - {}\n\n{}\n\n{}\n", self.caller, parse_desc(&self.desc), self.args, self.oargs)
             }
         }
     }
@@ -242,7 +242,7 @@ impl Help {
 
         format!(
             "{} {} {}",
-            self.name,
+            self.caller,
             args,
             oargs
         )

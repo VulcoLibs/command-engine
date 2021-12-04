@@ -1,38 +1,27 @@
 use super::*;
 
 
-#[doc(hidden)]
-fn parser<S: AsRef<str>>(s: S) -> Vec<String> {
-    let raw = s.as_ref();
-    let mut commands = Vec::<String>::new();
+/// Instruction wrapper for Command name, arguments and optional arguments.
+/// Created from string.
+/// Used by the synchronous and asynchronous Engine.
+#[derive(Debug)]
+pub struct Instruction {
+    caller: String,
+    args: Vec<String>,
+    oargs: HashMap<String, Option<String>>,
+}
 
-    let mut fake_split = false;
-    let mut spaceable = false;
-    let mut tmp = String::new();
-    for ch in raw.chars().into_iter() {
-        if ch == '"' && !fake_split {
-            spaceable = !spaceable;
+impl Instruction {
+    // ToDo: Rewrite the parser
+    fn parser(raw: String) -> Vec<String> {
+        let mut commands = Vec::<String>::new();
 
-            if tmp.is_empty() {
-                continue;
-            }
-            commands.push(tmp.clone());
-            tmp.clear();
-
-            continue;
-        }
-
-        if fake_split {
-            fake_split = false
-        } else if ch == '\\' {
-            fake_split = true;
-            continue;
-        }
-
-        if spaceable {
-            tmp.push(ch);
-        } else {
-            if ch == ' ' {
+        let mut fake_split = false;
+        let mut spaceable = false;
+        let mut tmp = String::new();
+        for ch in raw.chars().into_iter() {
+            if ch == '"' && !fake_split {
+                spaceable = !spaceable;
 
                 if tmp.is_empty() {
                     continue;
@@ -41,84 +30,105 @@ fn parser<S: AsRef<str>>(s: S) -> Vec<String> {
                 tmp.clear();
 
                 continue;
-            } else {
+            }
+
+            if fake_split {
+                fake_split = false
+            } else if ch == '\\' {
+                fake_split = true;
+                continue;
+            }
+
+            if spaceable {
                 tmp.push(ch);
+            } else {
+                if ch == ' ' {
+
+                    if tmp.is_empty() {
+                        continue;
+                    }
+                    commands.push(tmp.clone());
+                    tmp.clear();
+
+                    continue;
+                } else {
+                    tmp.push(ch);
+                }
             }
         }
-    }
 
-    if !tmp.is_empty() {
-        commands.push(tmp);
-    }
-
-    commands
-}
-
-
-/// Instruction wrapper for Command name, arguments and optional arguments.
-/// Created from string.
-/// Used by the synchronous and asynchronous Engine.
-#[derive(Default, Debug)]
-pub struct Instruction {
-    pub value: String,
-    pub args: Vec<String>,
-    pub oargs: HashMap<String, Option<String>>,
-}
-
-impl Instruction {
-    /// Creates an Instruction object from provided string
-    ///
-    /// # Arguments
-    ///
-    /// * `raw` - A string data with the command name and arguments
-    pub fn new<S: AsRef<str>>(s: S) -> StdResult<Self, Output> {
-        let raw = s.as_ref();
-        let commands = parser(raw);
-
-        if commands.is_empty() {
-            return Err(
-                Output::new_error(0, Some(String::from("Invalid instruction!")))
-            )
+        if !tmp.is_empty() {
+            commands.push(tmp);
         }
 
-        let value = commands.get(0).unwrap().clone();
+        commands
+    }
+
+    pub fn new<S: ToString>(input: S) -> StdResult<Self, Output> where Self: Sized {
+        use std::mem;
+
+        // let raw = match String::from_utf8(input.into_vec()) {
+        //     Ok(raw) => raw,
+        //     Err(error) => {
+        //         return Err(Output::new_error(0, Some(error)));
+        //     }
+        // };
+
+        let raw = input.to_string();
+
+        let mut parts = Self::parser(raw);
+
+        if parts.is_empty() {
+            return Err(Output::new_error(0, Some("Invalid instruction!")));
+        }
+
+        let caller = unsafe{ mem::take(parts.get_unchecked_mut(0)) };
         let mut args = Vec::<String>::new();
         let mut oargs = HashMap::<String, Option<String>>::new();
 
         let mut tmp_key = String::new();
-        let mut is_flag = false;
-        for x in &commands[1..] {
-            if x.starts_with("-") {
-                if is_flag {
-                    oargs.insert(tmp_key.clone(), None);
-                } else {
-                    is_flag = true;
-                }
-
-                tmp_key.clear();
-                tmp_key = x.clone();
-                continue;
+        let mut waiting_for_val = false;
+        for part in &mut parts[1..] {
+            match (part.starts_with("-"), waiting_for_val) {
+                (true, false) => {
+                    tmp_key = mem::take(part);
+                    waiting_for_val = true;
+                },
+                (true, true) => {
+                    oargs.insert(mem::take(&mut tmp_key), None);
+                    tmp_key = mem::take(part);
+                },
+                (false, true) => {
+                    oargs.insert(mem::take(&mut tmp_key), Some(mem::take(part)));
+                    waiting_for_val = false;
+                },
+                (false, false) => {
+                    args.push(mem::take(part));
+                },
             }
-
-            if is_flag {
-                is_flag = false;
-                oargs.insert(tmp_key.clone(), Some(x.clone()));
-                tmp_key.clear();
-                continue;
-            }
-
-            args.push(x.clone());
         }
 
         if !tmp_key.is_empty() {
-            oargs.insert(tmp_key.clone(), None);
+            oargs.insert(tmp_key, None);
         }
 
-        Ok( Self {
-            value,
+        Ok (Self {
+            caller,
             args,
-            oargs,
+            oargs
         } )
+    }
+
+    pub fn get_caller(&self) -> &String {
+        &self.caller
+    }
+
+    pub fn get_args(&self) -> &Vec<String> {
+        &self.args
+    }
+
+    pub fn get_oargs(&self) -> &HashMap<String, Option<String>> {
+        &self.oargs
     }
 }
 
@@ -134,7 +144,7 @@ impl Display for Instruction {
         write!(
             f,
             "Command: [\n\t{}\n]\nArgs: [\n\t{:?}\n]\nOargs: [\n\t{:?}\n]",
-            &self.value,
+            &self.caller,
             &self.args,
             &self.oargs,
         )

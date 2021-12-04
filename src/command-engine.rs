@@ -1,15 +1,10 @@
-#[cfg(feature = "async")]
-#[macro_use] extern crate async_trait;
+// ToDo: Add tests
 
+#[macro_use] extern crate lazy_static;
 
-#[doc(hidden)]
-#[cfg(test)]
-mod tests;
-
-mod engines;
+mod engine;
 pub mod shared;
 
-#[cfg(feature = "async")]
 pub use async_trait::async_trait;
-pub use engines::*;
-pub use shared::commands;
+pub use engine::*;
+pub use shared::{Command, CommandInfo};

@@ -1,6 +1,6 @@
 use super::*;
 
-pub const RESULT_MAX_PRIME: u16 = 4095;
+pub(crate) const RESULT_MAX_PRIME: u16 = 4095;
 const RESULT_DEF_OK: u16 = 0xA000;
 const RESULT_DEF_ERROR: u16 = 0xF000;
 
@@ -91,6 +91,7 @@ impl Result {
     }
 }
 
+
 impl Display for Result {
     fn fmt(&self, f: &mut Formatter<'_>) -> FmtResult {
         write!(
@@ -103,6 +104,7 @@ impl Display for Result {
 
 
 /// Wrapper for the Command's output
+#[derive(Debug)]
 pub struct Output {
     pub result: Result,
     pub message: String,

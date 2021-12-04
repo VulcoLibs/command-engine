@@ -1,3 +1,5 @@
+#![allow(unused)]
+
 /// This macro unwraps the Ok and returns Err from Result.
 ///
 /// Example:

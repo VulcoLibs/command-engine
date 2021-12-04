@@ -1,9 +1,8 @@
 # Command Engine
 An engine to create your own command-line interpreter. <br>
-- No dependencies *(only sync)*
+- Fully async
 - Commands as user-defined structures
-- Asynchronous commands
-- Case sensitive commands
+- Case-sensitive commands
 - Positional arguments
 - Optional non-positional arguments
 - Partial "departure" from the conventions
@@ -14,50 +13,32 @@ Versions `0.x.y` are not release ready, and might contain a lot of bugs. <br>
 
 ## Example
 ```rust
-use command_engine::{*, shared::*};
+use command_engine::*;
 
-struct MyCommand;
 
-impl Command for MyCommand {
+pub struct Example;
+
+impl CommandInfo for Example {
     (...)
 }
+
+#[async_trait]
+impl Command for Example {
+    (...)
+}
+
 
 fn main() {
     // Raw instruction in String 
-    let raw = String::from("mycommand help");
+    let raw = String::from("example help");
     
-    // Creating the Engine object and adding the command
-    let mut engine = Engine::new()
-        .add(MyCommand{});
+    // Creating a global Engine instance and returning the communicator
+    let engine = EngineBuilder::new().build().unwrap();
     
     // Executing the instruction
-    let out = engine.execute(&raw);
+    let out = engine.execute(&raw).await.unwrap();
     
     println!("StatusCode: '{}'\n{}", out.result, out.message)
-}
-```
-
-## Async Example
-```rust
-use command_engine::{*, shared::*};
-
-struct MyAsyncCommand;
-
-#[async_trait]
-impl AsyncCommand for MyAsyncCommand {
-    (...)
-}
-
-#[tokio::main]
-async fn main() {
-    let raw = String::from("mycommand help");
-
-    let mut engine = AsyncEngine::new()
-        .add(MyAsyncCommand{});
-
-    let out = engine.execute(&raw).await;
-
-    println!("StatusCode: '{}'\n{}", out.result, out.message);
 }
 ```
 
@@ -118,11 +99,4 @@ Not finished yet. Might change a little.
 X.oarg1 => oarg1 description
 X.oarg2 (sub_arg) => oarg2 with sub_arg description
 X.oarg3 [sub_arg_optional] => oarg3 with sub_arg_optional description
-```
-
-__**Custom:**__  *(Deprecated)* <br>
-~~Literally anything defined in an argument of `Help::custom` constructor.~~ <br>
-`on_help` now returns a String, so you can replace `Help::custom("Message").format_custom()` with `"Message".to_string()`
-```
-Message
 ```
