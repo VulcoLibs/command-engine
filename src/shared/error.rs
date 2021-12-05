@@ -2,6 +2,7 @@
 
 mod internal;
 
+use std::io::ErrorKind;
 use tokio::sync::mpsc::error::SendError;
 use tokio::sync::oneshot::error::RecvError;
 pub use internal::InternalError;
@@ -32,6 +33,8 @@ impl Display for Error {
 
 impl std::error::Error for Error {}
 
+unsafe impl Send for Error {}
+unsafe impl Sync for Error {}
 
 impl From<internal::InternalError> for Error {
     fn from(internal_error: InternalError) -> Self {
@@ -60,5 +63,11 @@ impl <T> From<tokio::sync::mpsc::error::SendError<T>> for Error {
 impl From<tokio::sync::oneshot::error::RecvError> for Error {
     fn from(_recv_error: RecvError) -> Self {
         InternalError::EngineIsNotRunning.into()
+    }
+}
+
+impl Into<tokio::io::Error> for Error {
+    fn into(self) -> std::io::Error {
+        std::io::Error::new(ErrorKind::Other, self)
     }
 }
