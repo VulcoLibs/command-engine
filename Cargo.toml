@@ -1,6 +1,6 @@
 [package]
 name = "command-engine"
-version = "0.6.0"
+version = "0.6.1"
 authors = ["FssAy <49795742+DmitrijVC@users.noreply.github.com>"]
 edition = "2018"
 
