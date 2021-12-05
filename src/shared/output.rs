@@ -25,6 +25,7 @@ const RESULT_DEF_ERROR: u16 = 0xF000;
 /// **Error** should contain prime value `1`, so
 /// the status code would be `0xF001`.
 #[derive(Eq, PartialEq, Hash, Debug)]
+#[cfg_attr(feature = "json", derive(Serialize, Deserialize))]
 pub enum Result {
     Ok(u16),
     Error(u16),
@@ -105,6 +106,7 @@ impl Display for Result {
 
 /// Wrapper for the Command's output
 #[derive(Debug)]
+#[cfg_attr(feature = "json", derive(Serialize, Deserialize))]
 pub struct Output {
     pub result: Result,
     pub message: String,
@@ -153,6 +155,16 @@ impl Output {
             Result::err(prime_val),
             msg,
         )
+    }
+
+    #[cfg(feature = "json")]
+    pub fn to_json(self) -> String {
+        serde_json::to_string(&self).unwrap()
+    }
+
+    #[cfg(feature = "json")]
+    pub fn from_json<S: AsRef<str>>(json: S) -> StdResult<Self, error::JsonError> {
+        serde_json::from_str::<Self>(json.as_ref())
     }
 }
 

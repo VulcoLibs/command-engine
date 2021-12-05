@@ -4,8 +4,10 @@ version = "0.6.1"
 authors = ["FssAy <49795742+DmitrijVC@users.noreply.github.com>"]
 edition = "2018"
 
+
 [lib]
 path = "src/command-engine.rs"
+
 
 [dependencies]
 async-trait = "0.1.9"
@@ -19,6 +21,18 @@ features = [
     # "full",
 ]
 
+[dependencies.serde]
+version = "1.0.130"
+features = ["derive"]
+optional = true
+
+[dependencies.serde_json]
+version = "1.0.72"
+optional = true
+
+
 [features]
 default = []
-full = []
+full = ["json"]
+
+json = ["serde", "serde_json"]

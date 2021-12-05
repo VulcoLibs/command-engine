@@ -1,6 +1,7 @@
 // ToDo: Add tests
 
 #[macro_use] extern crate lazy_static;
+#[cfg(feature = "json")] #[macro_use] extern crate serde;
 
 mod engine;
 pub mod shared;

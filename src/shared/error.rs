@@ -2,11 +2,12 @@
 
 mod internal;
 
+use super::*;
 use std::io::ErrorKind;
 use tokio::sync::mpsc::error::SendError;
 use tokio::sync::oneshot::error::RecvError;
 pub use internal::InternalError;
-use super::*;
+#[cfg(feature = "json")] pub use serde_json::Error as JsonError;
 
 
 pub type ResultCE<T> = std::result::Result<T, Error>;
