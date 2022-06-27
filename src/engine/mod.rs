@@ -43,6 +43,18 @@ impl Engine {
         result
     }
 
+    /// Same as `add()` method
+    pub fn add_blocking<C: Command + 'static>(&self, command: C) -> ResultCE<()> {
+        let (tx, rx) = oneshot::channel();
+
+        self.sender.blocking_send(Directive::CommandAdd {
+            command: Box::new(command),
+            resp: tx,
+        })?;
+
+        rx.blocking_recv()?
+    }
+
     /// Removes a Command from the Engine.
     ///
     /// Returns result which doesn't tell if the command was removed or not.
@@ -56,6 +68,15 @@ impl Engine {
         self.sender.send(Directive::CommandRemove {
             caller: caller.to_string()
         }).await?;
+
+        Ok(())
+    }
+
+    /// Same as `remove` method
+    pub fn remove_blocking<S: ToString>(&self, caller: S) -> ResultCE<()> {
+        self.sender.blocking_send(Directive::CommandRemove {
+            caller: caller.to_string()
+        })?;
 
         Ok(())
     }
