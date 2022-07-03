@@ -116,4 +116,30 @@ impl Engine {
         self.sender.send(Directive::Close).await?;
         Ok(())
     }
+
+    /// Checks if a specific command exists
+    ///
+    pub async fn contains(&self, caller: impl ToString) -> ResultCE<bool> {
+        let (tx, rx) = oneshot::channel();
+
+        self.sender.send(Directive::Exists {
+            caller: caller.to_string(),
+            resp: tx,
+        }).await?;
+
+        Ok(rx.await?)
+    }
+
+    /// Same as `contains()`
+    ///
+    pub fn contains_blocking(&self, caller: impl ToString) -> ResultCE<bool> {
+        let (tx, rx) = oneshot::channel();
+
+        self.sender.blocking_send(Directive::Exists {
+            caller: caller.to_string(),
+            resp: tx,
+        })?;
+
+        Ok(rx.blocking_recv()?)
+    }
 }

@@ -114,6 +114,10 @@ impl EngineBuilder {
                     run = false;
                 }
 
+                Directive::Exists { caller, resp } => {
+                    let _ = resp.send(commands.contains_key(&caller));
+                }
+
             }
 
             if run == false {

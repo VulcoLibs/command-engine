@@ -20,6 +20,10 @@ pub(crate) enum Directive {
         input: String,
         resp: Resp<Result<(Arc<Box<dyn Command>>, Instruction), Output>>,
     },
+    Exists {
+        caller: String,
+        resp: Resp<bool>
+    },
     Close,
 }
 
