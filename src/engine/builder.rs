@@ -76,7 +76,7 @@ impl EngineBuilder {
                     drop(commands.remove(&caller));
                 }
 
-                Execute { input, resp } => {
+                Execute { input, on_caller, resp } => {
                     let instruction = match Instruction::new(input) {
                         Ok(instruction) => instruction,
                         Err(output) => {
@@ -84,6 +84,13 @@ impl EngineBuilder {
                             continue;
                         }
                     };
+
+                    if let Some(on_caller) = on_caller {
+                        if *instruction.get_caller() != on_caller {
+                            let _ = resp.send(Err(Output::new_error(0, Some("caller mismatch"))));
+                            continue;
+                        }
+                    }
 
                     let command = match commands.get(instruction.get_caller()) {
                         None => {

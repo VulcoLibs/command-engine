@@ -81,24 +81,14 @@ impl Engine {
         Ok(())
     }
 
-    /// Executes a given input.
-    ///
-    /// Returns an Output based on the given input.
-    ///
-    /// # Arguments
-    ///
-    /// * `input` - A String representing raw Instruction to execute
-    ///
-    pub async fn execute<S: ToString>(&self, input: S) -> ResultCE<Output> {
+    async fn _execute<S: ToString, C: ToString>(&self, input: S, on_caller: Option<C>) -> ResultCE<Output> {
         let (tx, rx) = oneshot::channel();
 
         self.sender.send(Directive::Execute {
             input: input.to_string(),
+            on_caller: on_caller.map(|c| c.to_string()),
             resp: tx,
         }).await?;
-
-        // let result = rx.await?;
-        // Ok(result)
 
         match rx.await? {
             Ok((command, instruction)) => {
@@ -108,6 +98,29 @@ impl Engine {
                 Ok(output)
             }
         }
+    }
+
+    /// Executes a given input.
+    ///
+    /// Returns an Output based on the given input.
+    ///
+    /// # Arguments
+    ///
+    /// * `input` - A String representing raw Instruction to execute
+    ///
+    pub async fn execute<S: ToString>(&self, input: S) -> ResultCE<Output> {
+        self._execute::<_, String>(input, None).await
+    }
+
+    /// Same as `execute`, but runs only on a specific caller.
+    ///
+    /// # Arguments
+    ///
+    /// * `input` - A String representing raw Instruction to execute
+    /// * `caller` - A command's caller to execute on
+    ///
+    pub async fn execute_on_caller(&self, input: impl ToString, caller: impl ToString) -> ResultCE<Output> {
+        self._execute(input, Some(caller)).await
     }
 
     /// Closes the Engine.

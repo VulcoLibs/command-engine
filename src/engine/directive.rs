@@ -18,6 +18,7 @@ pub(crate) enum Directive {
     },
     Execute {
         input: String,
+        on_caller: Option<String>,
         resp: Resp<Result<(Arc<Box<dyn Command>>, Instruction), Output>>,
     },
     Exists {
