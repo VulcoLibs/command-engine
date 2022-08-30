@@ -116,7 +116,6 @@ impl EngineBuilder {
                 }
 
                 Close => {
-                    println!("Calling to die");
                     tx.close();
                     run = false;
                 }
@@ -132,8 +131,6 @@ impl EngineBuilder {
             }
 
         }
-
-        println!("DEAD!");
     }
 
     fn mark_operational(value: bool) {
