@@ -2,7 +2,9 @@ use std::fmt::{Display, Formatter};
 
 #[derive(Debug)]
 pub enum Error {
-
+    InstructionMissingCaller,
+    InstructionMissingOArgDelimiter,
+    InstructionSubArgWithoutOArg,
 }
 
 impl Display for Error {

@@ -6,6 +6,8 @@ extern crate serde;
 
 mod engine_sync;
 mod engine_async;
+mod instruction;
 mod error;
 
+pub use instruction::*;
 pub use error::*;
