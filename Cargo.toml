@@ -5,7 +5,7 @@ authors = ["FssAy"]
 edition = "2018"
 
 [lib]
-path = "src/command-engine.rs"
+path = "src/lib.rs"
 
 [dependencies.tokio]
 version = "1.*"
