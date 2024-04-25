@@ -6,3 +6,6 @@ extern crate serde;
 
 mod engine_sync;
 mod engine_async;
+mod error;
+
+pub use error::*;
