@@ -1,7 +1,7 @@
 use std::collections::HashMap;
 use crate::Error;
 
-#[derive(Debug)]
+#[derive(Debug, Eq, PartialEq)]
 pub struct Instruction<'a> {
     pub caller: &'a str,
     pub args: Vec<&'a str>,
@@ -67,5 +67,12 @@ impl<'a> Instruction<'a> {
             o_args: HashMap::new(),
             input: "",
         }
+    }
+}
+
+#[cfg(test)]
+impl Default for Instruction<'_> {
+    fn default() -> Self {
+        Self::empty()
     }
 }

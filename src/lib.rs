@@ -11,3 +11,6 @@ mod error;
 
 pub use instruction::*;
 pub use error::*;
+
+#[cfg(test)]
+mod tests;
