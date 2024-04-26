@@ -5,6 +5,7 @@ pub enum Error {
     InstructionMissingCaller,
     InstructionMissingOArgDelimiter,
     InstructionSubArgWithoutOArg,
+    EngineCommandNotFound,
 }
 
 impl Display for Error {
