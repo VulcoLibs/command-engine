@@ -28,3 +28,5 @@ optional = true
 default = []
 full = ["json"]
 json = ["serde", "serde_json"]
+async = ["engine"]
+engine = []

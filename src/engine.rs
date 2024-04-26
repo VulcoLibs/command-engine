@@ -27,7 +27,8 @@ impl<Output: 'static> Engine<Output> {
     pub fn is_empty(&self) -> bool {
         self.commands.is_empty()
     }
-    
+
+    #[cfg(feature = "async")]
     pub async fn execute(&self, input: impl AsRef<str>) -> Result<Output, Error> {
         let instruction = Instruction::new(input.as_ref())?;
 
@@ -37,6 +38,19 @@ impl<Output: 'static> Engine<Output> {
             .ok_or_else(|| Error::EngineCommandNotFound)?;
 
         let output = command.on_execute(instruction).await;
+        Ok(output)
+    }
+
+    #[cfg(not(feature = "async"))]
+    pub fn execute(&self, input: impl AsRef<str>) -> Result<Output, Error> {
+        let instruction = Instruction::new(input.as_ref())?;
+
+        let command = self
+            .commands
+            .get(instruction.caller)
+            .ok_or_else(|| Error::EngineCommandNotFound)?;
+
+        let output = command.on_execute(instruction);
         Ok(output)
     }
 }

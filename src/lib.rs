@@ -4,10 +4,10 @@
 #[macro_use]
 extern crate serde;
 
-mod engine_sync;
-mod engine_async;
+mod engine;
 mod shared;
 
+pub use engine::*;
 pub use shared::*;
 
 #[cfg(test)]
