@@ -6,11 +6,9 @@ extern crate serde;
 
 mod engine_sync;
 mod engine_async;
-mod instruction;
-mod error;
+mod shared;
 
-pub use instruction::*;
-pub use error::*;
+pub use shared::*;
 
 #[cfg(test)]
 mod tests;
