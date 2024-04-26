@@ -12,10 +12,10 @@ version = "1.*"
 features = [
     "rt-multi-thread",
     "sync",
-    # "full",
 ]
+optional = true
 
 [features]
 default = []
-async = ["engine"]
+async = ["engine", "tokio"]
 engine = []
