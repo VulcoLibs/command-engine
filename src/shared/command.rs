@@ -1,5 +1,7 @@
 use super::*;
 
+/// Each type implementing `Command` trait must also implement `CommandInfo` which is used only to
+/// retrieve information about the Command.
 pub trait CommandInfo {
     fn caller(&self) -> &'static str;
 }
@@ -11,6 +13,28 @@ mod command_async {
     use std::pin::Pin;
     use std::task::{Context, Poll};
 
+    /// Example:
+    /// ```rust
+    /// use command_engine::{Command, CommandInfo, Instruction, OutputFuture, IntoOutputFuture};
+    ///
+    /// struct MyCommand1;
+    ///
+    /// impl CommandInfo for MyCommand1 {
+    ///     fn caller(&self) -> &'static str {
+    ///         "command1"
+    ///     }
+    /// }
+    ///
+    /// impl Command for MyCommand1 {
+    ///     type Output = ();
+    ///
+    ///     fn on_execute<'a>(&self, _ins: Instruction<'a>) -> OutputFuture<'a, Self::Output> {
+    ///         async move {
+    ///             ()
+    ///         }.output_future()
+    ///     }
+    /// }
+    /// ```
     pub trait Command: CommandInfo + Send + Sync + 'static {
         type Output;
 
@@ -46,6 +70,26 @@ mod command_async {
 mod command_sync {
     use super::*;
 
+    /// Example:
+    /// ```rust
+    /// use command_engine::{Command, CommandInfo, Instruction};
+    ///
+    /// struct MyCommand1;
+    ///
+    /// impl CommandInfo for MyCommand1 {
+    ///     fn caller(&self) -> &'static str {
+    ///         "command1"
+    ///     }
+    /// }
+    ///
+    /// impl Command for MyCommand1 {
+    ///     type Output = ();
+    ///
+    ///     fn on_execute(&self, _ins: Instruction) -> Self::Output {
+    ///         ()
+    ///     }
+    /// }
+    /// ```
     pub trait Command: CommandInfo + 'static {
         type Output;
 

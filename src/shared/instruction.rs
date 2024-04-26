@@ -1,6 +1,23 @@
 use std::collections::HashMap;
 use crate::Error;
 
+/// Arguments format structure used to deserialize raw inputs.
+///
+/// The format of instruction is as follows:
+/// ```pseudo
+/// <caller> <arg> --<o_arg> <sub_arg>
+/// ```
+///
+/// Where:
+/// - `caller` - Command caller, used to determine which command to use.
+/// - `arg` - Positional argument where the position matters.
+/// - `o_arg` - Optional argument. These arguments can be placed in any order.
+/// - `sub_arg` - Sub argument that is a child of `o_arg`.
+///
+/// These can also be chained:
+/// ```pseudo
+/// <caller> <arg> <arg> --<o_arg> <sub_arg> <sub_arg> --<o_arg>
+/// ```
 #[derive(Debug, Eq, PartialEq)]
 pub struct Instruction<'a> {
     pub caller: &'a str,
