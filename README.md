@@ -2,7 +2,7 @@
 Transform string instructions into code execution. <br>
 
 ## Disclaimer
-#### ToDo _(before `1.0.0-rc.1`)_:
+#### ToDo _(before `1.0.0`)_:
 - [x] ~~Support for escape characters in input.~~ **_[Added collector]_**
 - [ ] Remove `--` from deserialized flags?
 
