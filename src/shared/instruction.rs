@@ -1,152 +1,161 @@
-use super::*;
+use std::collections::HashMap;
+use crate::Error;
 
+const FLAG_PREFIX: &str = "--";
 
-/// Instruction wrapper for Command name, arguments and optional arguments.
-/// Created from string.
-/// Used by the synchronous and asynchronous Engine.
-#[derive(Debug)]
-pub struct Instruction {
-    caller: String,
-    args: Vec<String>,
-    oargs: HashMap<String, Option<String>>,
+#[derive(Default, Debug)]
+struct State<'a> {
+    buffer: Vec<&'a str>,
+    start: Option<usize>,
+    end: Option<usize>,
+    ignore_space: bool,
+    collecting: bool,
+    previous: Option<char>,
 }
 
-impl Instruction {
-    // ToDo: Rewrite the parser
-    fn parser(raw: String) -> Vec<String> {
-        let mut commands = Vec::<String>::new();
+impl<'a> State<'a> {
+    fn push_part(&mut self, pos: usize, input: &'a str) {
+        if self.start.is_none() {
+            return;;
+        }
 
-        let mut fake_split = false;
-        let mut spaceable = false;
-        let mut tmp = String::new();
-        for ch in raw.chars().into_iter() {
-            if ch == '"' && !fake_split {
-                spaceable = !spaceable;
+        let start = self.start.take().unwrap();
+        let end = *self.end.insert(pos);
+        let part = &input[start..end];
 
-                if tmp.is_empty() {
-                    continue;
-                }
-                commands.push(tmp.clone());
-                tmp.clear();
+        self.buffer.push(part);
+    }
+}
 
-                continue;
-            }
+/// Arguments format structure used to deserialize raw inputs.
+///
+/// The format of instruction is as follows:
+/// ```pseudo
+/// <caller> <arg> --<o_arg> <sub_arg>
+/// ```
+///
+/// Where:
+/// - `caller` - Command caller, used to determine which command to use.
+/// - `arg` - Positional argument where the position matters.
+/// - `o_arg` - Optional argument. These arguments can be placed in any order.
+/// - `sub_arg` - Sub argument that is a child of `o_arg`.
+///
+/// These can also be chained:
+/// ```pseudo
+/// <caller> <arg> <arg> --<o_arg> <sub_arg> <sub_arg> --<o_arg>
+/// ```
+#[derive(Debug, Eq, PartialEq)]
+pub struct Instruction<'a> {
+    pub caller: &'a str,
+    pub args: Vec<&'a str>,
+    pub o_args: HashMap<&'a str, Option<Vec<&'a str>>>,
+    pub input: &'a str,
+}
 
-            if fake_split {
-                fake_split = false
-            } else if ch == '\\' {
-                fake_split = true;
-                continue;
-            }
+impl<'a> Instruction<'a> {
+    pub fn new<T: AsRef<str> + ?Sized>(input: &'a T) -> Result<Instruction<'a>, Error> {
+        let mut instruction = Self::empty();
+        instruction.input = input.as_ref();
 
-            if spaceable {
-                tmp.push(ch);
-            } else {
-                if ch == ' ' {
+        let input = instruction.input;
 
-                    if tmp.is_empty() {
-                        continue;
+        let mut state = State::default();
+        for (pos, char) in input.chars().enumerate() {
+            if state.collecting || state.ignore_space || char != ' ' {
+                if !state.collecting && char == '"' {
+                    if state.previous == Some('#') {
+                        state.collecting = true;
+                    } else {
+                        if state.ignore_space {
+                            state.push_part(pos, input);
+                            state.ignore_space = false
+                        } else {
+                            state.ignore_space = true;
+                        }
                     }
-                    commands.push(tmp.clone());
-                    tmp.clear();
-
-                    continue;
                 } else {
-                    tmp.push(ch);
+                    if state.collecting && char == '#' && state.previous == Some('"') {
+                        state.collecting = false;
+                        state.start = state.start.map(|pos| pos+2);
+                        state.push_part(pos-1, input);
+                    } else {
+                        if state.start.is_none() {
+                            state.start = Some(pos);
+                        } else {
+                            let _ = state.end.insert(pos);
+                        }
+                    }
+                }
+            } else {
+                state.push_part(pos, input);
+            }
+
+            state.previous = Some(char);
+        }
+
+        if let Some(start) = state.start {
+            if let Some(end) = state.end {
+                let part = &input[start..=end];
+                if !part.is_empty() {
+                    state.buffer.push(part);
                 }
             }
         }
 
-        if !tmp.is_empty() {
-            commands.push(tmp);
+        let mut split = state.buffer.into_iter();
+
+        if let Some(part) = split.next() {
+            instruction.caller = part;
+        } else {
+            return Err(Error::InstructionMissingCaller);
         }
 
-        commands
-    }
+        let mut current_o_arg = "#";
+        let mut is_pos_args = true;
+        for part in split {
+            if is_pos_args {
+                if part.starts_with(FLAG_PREFIX) {
+                    is_pos_args = false;
+                } else {
+                    instruction.args.push(part);
+                }
+            }
 
-    pub fn new<S: ToString>(input: S) -> StdResult<Self, Output> where Self: Sized {
-        use std::mem;
+            if !is_pos_args {
+                if part.starts_with(FLAG_PREFIX) {
+                    instruction.o_args.insert(part, None);
+                    current_o_arg = part;
+                } else {
+                    let sub_args = instruction
+                        .o_args
+                        .get_mut(current_o_arg)
+                        .ok_or_else(|| Error::InstructionSubArgWithoutOArg)?;
 
-        // let raw = match String::from_utf8(input.into_vec()) {
-        //     Ok(raw) => raw,
-        //     Err(error) => {
-        //         return Err(Output::new_error(0, Some(error)));
-        //     }
-        // };
-
-        let raw = input.to_string();
-
-        let mut parts = Self::parser(raw);
-
-        if parts.is_empty() {
-            return Err(Output::new_error(0, Some("Invalid instruction!")));
-        }
-
-        let caller = unsafe{ mem::take(parts.get_unchecked_mut(0)) };
-        let mut args = Vec::<String>::new();
-        let mut oargs = HashMap::<String, Option<String>>::new();
-
-        let mut tmp_key = String::new();
-        let mut waiting_for_val = false;
-        for part in &mut parts[1..] {
-            match (part.starts_with("-"), waiting_for_val) {
-                (true, false) => {
-                    tmp_key = mem::take(part);
-                    waiting_for_val = true;
-                },
-                (true, true) => {
-                    oargs.insert(mem::take(&mut tmp_key), None);
-                    tmp_key = mem::take(part);
-                },
-                (false, true) => {
-                    oargs.insert(mem::take(&mut tmp_key), Some(mem::take(part)));
-                    waiting_for_val = false;
-                },
-                (false, false) => {
-                    args.push(mem::take(part));
-                },
+                    if let Some(sub_args) = sub_args {
+                        sub_args.push(part);
+                    } else {
+                        *sub_args = Some(vec![part]);
+                    }
+                }
             }
         }
 
-        if !tmp_key.is_empty() {
-            oargs.insert(tmp_key, None);
+        Ok(instruction)
+    }
+
+    fn empty() -> Instruction<'a> {
+        Self {
+            caller: "",
+            args: Vec::new(),
+            o_args: HashMap::new(),
+            input: "",
         }
-
-        Ok (Self {
-            caller,
-            args,
-            oargs
-        } )
-    }
-
-    pub fn get_caller(&self) -> &String {
-        &self.caller
-    }
-
-    pub fn get_args(&self) -> &Vec<String> {
-        &self.args
-    }
-
-    pub fn get_oargs(&self) -> &HashMap<String, Option<String>> {
-        &self.oargs
     }
 }
 
-/// Display trait implementation for Instruction struct showing all the attributes.
-///
-/// * Command name
-///
-/// * Command arguments
-///
-/// * Command optional arguments
-impl Display for Instruction {
-    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
-        write!(
-            f,
-            "Command: [\n\t{}\n]\nArgs: [\n\t{:?}\n]\nOargs: [\n\t{:?}\n]",
-            &self.caller,
-            &self.args,
-            &self.oargs,
-        )
+#[cfg(test)]
+impl Default for Instruction<'_> {
+    fn default() -> Self {
+        Self::empty()
     }
 }

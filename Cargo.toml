@@ -1,38 +1,22 @@
 [package]
 name = "command-engine"
-version = "0.7.1"
-authors = ["FssAy <49795742+DmitrijVC@users.noreply.github.com>"]
+version = "1.0.0-rc.1"
+authors = ["FssAy"]
 edition = "2018"
 
-
 [lib]
-path = "src/command-engine.rs"
-
-
-[dependencies]
-async-trait = "0.1.9"
-lazy_static = "1.4.0"
+path = "src/lib.rs"
+doctest = false
 
 [dependencies.tokio]
-version = "1.9.0"
+version = "1.*"
 features = [
     "rt-multi-thread",
     "sync",
-    # "full",
 ]
-
-[dependencies.serde]
-version = "1.0.130"
-features = ["derive"]
 optional = true
-
-[dependencies.serde_json]
-version = "1.0.72"
-optional = true
-
 
 [features]
-default = []
-full = ["json"]
-
-json = ["serde", "serde_json"]
+default = ["engine"]
+async = ["tokio"]
+engine = []

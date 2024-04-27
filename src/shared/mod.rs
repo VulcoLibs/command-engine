@@ -1,19 +1,7 @@
-use std::result::Result as StdResult;
-use std::fmt::Result as FmtResult;
-use std::collections::HashMap;
-use std::fmt::{Formatter, Display};
-
+mod error;
 mod instruction;
-#[doc(hidden)] mod help;  // Undocumented, beta module
-mod output;
-#[doc(hidden)] pub mod error;
-#[doc(hidden)] mod commands;
-#[doc(hidden)] mod traits;
+mod command;
 
-#[macro_use]
-mod macros;
-
-pub use traits::*;
+pub use error::*;
 pub use instruction::*;
-pub use help::{Help, SubArg};
-pub use output::Output;
+pub use command::*;
