@@ -11,6 +11,20 @@ struct State<'a> {
     ignore_space: bool,
 }
 
+impl<'a> State<'a> {
+    fn push_part(&mut self, pos: usize, input: &'a str) {
+        if self.start.is_none() {
+            return;;
+        }
+
+        let start = self.start.take().unwrap();
+        let end = *self.end.insert(pos);
+        let part = &input[start..end];
+
+        self.buffer.push(part);
+    }
+}
+
 /// Arguments format structure used to deserialize raw inputs.
 ///
 /// The format of instruction is as follows:
@@ -47,7 +61,12 @@ impl<'a> Instruction<'a> {
         for (pos, char) in input.chars().enumerate() {
             if state.ignore_space || char != ' ' {
                 if char == '"' {
-                    state.ignore_space = !state.ignore_space;
+                    if state.ignore_space {
+                        state.push_part(pos, input);
+                        state.ignore_space = false
+                    } else {
+                        state.ignore_space = true;
+                    }
                     continue;
                 }
 
@@ -57,15 +76,7 @@ impl<'a> Instruction<'a> {
                     let _ = state.end.insert(pos);
                 }
             } else {
-                if state.start.is_none() {
-                    continue;
-                }
-
-                let start = state.start.take().unwrap();
-                let end = *state.end.insert(pos);
-                let part = &input[start..end];
-
-                state.buffer.push(part);
+                state.push_part(pos, input);
             }
         }
 
