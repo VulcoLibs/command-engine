@@ -3,6 +3,13 @@ use crate::Error;
 
 const FLAG_PREFIX: &str = "--";
 
+#[derive(Default)]
+struct State<'a> {
+    buffer: Vec<&'a str>,
+    start: Option<usize>,
+    end: Option<usize>,
+}
+
 /// Arguments format structure used to deserialize raw inputs.
 ///
 /// The format of instruction is as follows:
@@ -35,10 +42,35 @@ impl<'a> Instruction<'a> {
 
         let input = instruction.input;
 
-        let mut split = input
-            .split(' ')
-            .map(str::trim)
-            .filter(|part| !part.is_empty());
+        let mut state = State::default();
+        for (pos, char) in input.chars().enumerate() {
+            if char != ' ' {
+                if state.start.is_none() {
+                    state.start = Some(pos);
+                } else {
+                    let _ = state.end.insert(pos);
+                }
+            } else {
+                if state.start.is_none() {
+                    continue;
+                }
+
+                let start = state.start.take().unwrap();
+                let end = *state.end.insert(pos);
+                let part = &input[start..end];
+
+                state.buffer.push(part);
+            }
+        }
+
+        if let Some(start) = state.start {
+            if let Some(end) = state.end {
+                let part = &input[start..=end];
+                state.buffer.push(part);
+            }
+        }
+
+        let mut split = state.buffer.into_iter();
 
         if let Some(part) = split.next() {
             instruction.caller = part;
