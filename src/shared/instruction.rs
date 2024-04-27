@@ -1,6 +1,8 @@
 use std::collections::HashMap;
 use crate::Error;
 
+const FLAG_PREFIX: &str = "--";
+
 /// Arguments format structure used to deserialize raw inputs.
 ///
 /// The format of instruction is as follows:
@@ -48,7 +50,7 @@ impl<'a> Instruction<'a> {
         let mut is_pos_args = true;
         for part in split {
             if is_pos_args {
-                if part.starts_with("--") {
+                if part.starts_with(FLAG_PREFIX) {
                     is_pos_args = false;
                 } else {
                     instruction.args.push(part);
@@ -56,7 +58,7 @@ impl<'a> Instruction<'a> {
             }
 
             if !is_pos_args {
-                if part.starts_with("--") {
+                if part.starts_with(FLAG_PREFIX) {
                     instruction.o_args.insert(part, None);
                     current_o_arg = part;
                 } else {
