@@ -57,6 +57,22 @@ fn instruction() {
         .. Default::default()
     });
 
+    test_instruction(r#"caller --o_arg1 "sub arg""#, Instruction {
+        caller: "caller",
+        o_args: map!(
+            "--o_arg1" => Some(vec!["sub arg"])
+        ),
+        .. Default::default()
+    });
+
+    test_instruction(r#"caller "--o_arg 1""#, Instruction {
+        caller: "caller",
+        o_args: map!(
+            "--o_arg 1" => None
+        ),
+        .. Default::default()
+    });
+
     test_instruction(r#"caller "arg 1"arg2"#, Instruction {
         caller: "caller",
         args: vec!["arg 1", "arg2"],
