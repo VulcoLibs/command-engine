@@ -62,6 +62,30 @@ fn instruction() {
         args: vec!["arg 1", "arg2"],
         .. Default::default()
     });
+
+    test_instruction("caller #\"arg 1\"# arg2", Instruction {
+        caller: "caller",
+        args: vec!["arg 1", "arg2"],
+        .. Default::default()
+    });
+
+    test_instruction("caller #\"arg#1\"# arg2", Instruction {
+        caller: "caller",
+        args: vec!["arg#1", "arg2"],
+        .. Default::default()
+    });
+
+    test_instruction("caller #\"arg\" # \" 1\"# \"arg 2\"", Instruction {
+        caller: "caller",
+        args: vec!["arg\" # \" 1", "arg 2"],
+        .. Default::default()
+    });
+
+    test_instruction("caller #\"arg 1\"#arg2", Instruction {
+        caller: "caller",
+        args: vec!["arg 1", "arg2"],
+        .. Default::default()
+    });
 }
 
 #[test]

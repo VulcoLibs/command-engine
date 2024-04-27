@@ -9,6 +9,8 @@ struct State<'a> {
     start: Option<usize>,
     end: Option<usize>,
     ignore_space: bool,
+    collecting: bool,
+    previous: Option<char>,
 }
 
 impl<'a> State<'a> {
@@ -59,25 +61,36 @@ impl<'a> Instruction<'a> {
 
         let mut state = State::default();
         for (pos, char) in input.chars().enumerate() {
-            if state.ignore_space || char != ' ' {
-                if char == '"' {
-                    if state.ignore_space {
-                        state.push_part(pos, input);
-                        state.ignore_space = false
+            if state.collecting || state.ignore_space || char != ' ' {
+                if !state.collecting && char == '"' {
+                    if state.previous == Some('#') {
+                        state.collecting = true;
                     } else {
-                        state.ignore_space = true;
+                        if state.ignore_space {
+                            state.push_part(pos, input);
+                            state.ignore_space = false
+                        } else {
+                            state.ignore_space = true;
+                        }
                     }
-                    continue;
-                }
-
-                if state.start.is_none() {
-                    state.start = Some(pos);
                 } else {
-                    let _ = state.end.insert(pos);
+                    if state.collecting && char == '#' && state.previous == Some('"') {
+                        state.collecting = false;
+                        state.start = state.start.map(|pos| pos+2);
+                        state.push_part(pos-1, input);
+                    } else {
+                        if state.start.is_none() {
+                            state.start = Some(pos);
+                        } else {
+                            let _ = state.end.insert(pos);
+                        }
+                    }
                 }
             } else {
                 state.push_part(pos, input);
             }
+
+            state.previous = Some(char);
         }
 
         if let Some(start) = state.start {
