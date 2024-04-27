@@ -52,6 +52,17 @@ Instruction {
 };
 ```
 
+To add spaces in arguments use double quotes `"`:
+```pseudo
+example "argument 1" "--flag 2" "child 1"
+```
+If there are double quotes in the argument it's suggested to use collector `#`:
+```pseudo
+example #"argument "quotes" 1"#
+```
+
+There are no escape characters to avoid any heap allocations. Each argument is a string slice taken from the input.
+
 ## Example
 Sync version:
 ```rust
