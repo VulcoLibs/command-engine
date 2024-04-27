@@ -50,6 +50,12 @@ fn instruction() {
         ),
         .. Default::default()
     });
+
+    test_instruction(r#"caller "arg 1""#, Instruction {
+        caller: "caller",
+        args: vec!["arg 1"],
+        .. Default::default()
+    });
 }
 
 #[test]

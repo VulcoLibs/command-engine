@@ -3,11 +3,12 @@ use crate::Error;
 
 const FLAG_PREFIX: &str = "--";
 
-#[derive(Default)]
+#[derive(Default, Debug)]
 struct State<'a> {
     buffer: Vec<&'a str>,
     start: Option<usize>,
     end: Option<usize>,
+    ignore_space: bool,
 }
 
 /// Arguments format structure used to deserialize raw inputs.
@@ -44,7 +45,12 @@ impl<'a> Instruction<'a> {
 
         let mut state = State::default();
         for (pos, char) in input.chars().enumerate() {
-            if char != ' ' {
+            if state.ignore_space || char != ' ' {
+                if char == '"' {
+                    state.ignore_space = !state.ignore_space;
+                    continue;
+                }
+
                 if state.start.is_none() {
                     state.start = Some(pos);
                 } else {
@@ -66,7 +72,9 @@ impl<'a> Instruction<'a> {
         if let Some(start) = state.start {
             if let Some(end) = state.end {
                 let part = &input[start..=end];
-                state.buffer.push(part);
+                if !part.is_empty() {
+                    state.buffer.push(part);
+                }
             }
         }
 
@@ -78,7 +86,7 @@ impl<'a> Instruction<'a> {
             return Err(Error::InstructionMissingCaller);
         }
 
-        let mut current_o_arg = "";
+        let mut current_o_arg = "#";
         let mut is_pos_args = true;
         for part in split {
             if is_pos_args {
