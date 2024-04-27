@@ -4,7 +4,7 @@ version = "1.0.0-rc.1"
 authors = ["FssAy"]
 edition = "2018"
 description = "Transform string instructions into code execution."
-license = "GPL-3"
+license = "GPL-3.0-only"
 repository = "https://github.com/VulcoLibs/command-engine"
 
 [lib]
