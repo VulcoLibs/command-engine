@@ -1,6 +1,6 @@
 [package]
 name = "command-engine"
-version = "1.0.0-rc.1"
+version = "1.0.0"
 authors = ["FssAy"]
 edition = "2018"
 description = "Transform string instructions into code execution."

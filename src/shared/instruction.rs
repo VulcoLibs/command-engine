@@ -2,6 +2,9 @@ use std::collections::HashMap;
 use crate::Error;
 
 const FLAG_PREFIX: &str = "--";
+const SYMBOL_SPACE: char = ' ';
+const SYMBOL_QUOTES: char = '"';
+const SYMBOL_HASH: char = '#';
 
 #[derive(Default, Debug)]
 struct State<'a> {
@@ -16,7 +19,7 @@ struct State<'a> {
 impl<'a> State<'a> {
     fn push_part(&mut self, pos: usize, input: &'a str) {
         if self.start.is_none() {
-            return;;
+            return;
         }
 
         let start = self.start.take().unwrap();
@@ -61,9 +64,9 @@ impl<'a> Instruction<'a> {
 
         let mut state = State::default();
         for (pos, char) in input.chars().enumerate() {
-            if state.collecting || state.ignore_space || char != ' ' {
-                if !state.collecting && char == '"' {
-                    if state.previous == Some('#') {
+            if state.collecting || state.ignore_space || char != SYMBOL_SPACE {
+                if !state.collecting && char == SYMBOL_QUOTES {
+                    if state.previous == Some(SYMBOL_HASH) {
                         state.collecting = true;
                     } else {
                         if state.ignore_space {
@@ -74,7 +77,7 @@ impl<'a> Instruction<'a> {
                         }
                     }
                 } else {
-                    if state.collecting && char == '#' && state.previous == Some('"') {
+                    if state.collecting && char == SYMBOL_HASH && state.previous == Some(SYMBOL_QUOTES) {
                         state.collecting = false;
                         state.start = state.start.map(|pos| pos+2);
                         state.push_part(pos-1, input);
