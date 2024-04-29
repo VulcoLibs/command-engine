@@ -19,7 +19,7 @@ struct State<'a> {
 impl<'a> State<'a> {
     fn push_part(&mut self, pos: usize, input: &'a str) {
         if self.start.is_none() {
-            return;;
+            return;
         }
 
         let start = self.start.take().unwrap();
