@@ -1,17 +1,6 @@
 # Command Engine
 Transform string instructions into code execution. <br>
 
-## Disclaimer
-#### ToDo _(before `1.0.0`)_:
-- [x] ~~Support for escape characters in input.~~ **_[Added collector]_**
-- [ ] Remove `--` from deserialized flags?
-
-#### Versioning:
-- `*.*.*` - Released.
-- `*.*.*-rc.*` - Release Candidate.
-- `*.*.*-dev` - Unreleased in production.
-- `0.*.*` - Deprecated.
-
 ## Engine
 This crate provides a default engine, that is present if default features are enabled.
 It is simply a container for your Commands that can also execute them based on the input.
@@ -95,3 +84,15 @@ fn main() {
     println!("{}", output);
 }
 ```
+
+## Disclaimer
+
+#### ToDo _(in future)_:
+- [ ] Custom Instructions (just like the Outputs)
+- [ ] Integrated help command
+
+#### Versioning:
+- `*.*.*` - Released.
+- `*.*.*-rc.*` - Release Candidate.
+- `*.*.*-dev` - Unreleased in production.
+- `0.*.*` - Deprecated.
